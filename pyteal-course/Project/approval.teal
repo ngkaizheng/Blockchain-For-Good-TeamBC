@@ -1,0 +1,225 @@
+#pragma version 5
+txn ApplicationID
+int 0
+==
+bnz main_l23
+txn OnCompletion
+int OptIn
+==
+bnz main_l22
+txn OnCompletion
+int CloseOut
+==
+bnz main_l21
+txn OnCompletion
+int UpdateApplication
+==
+bnz main_l20
+txn OnCompletion
+int DeleteApplication
+==
+bnz main_l19
+txn OnCompletion
+int NoOp
+==
+bnz main_l7
+err
+main_l7:
+global GroupSize
+int 1
+==
+assert
+global LatestTimestamp
+byte "EndDate"
+app_global_get
+>=
+byte "EventProgress"
+app_global_get
+int 0
+==
+&&
+bnz main_l18
+txna ApplicationArgs 0
+byte "Donation"
+==
+bnz main_l12
+txna ApplicationArgs 0
+byte "Claim"
+==
+bnz main_l11
+err
+main_l11:
+txn Sender
+byte "Receiver"
+app_global_get
+==
+assert
+global LatestTimestamp
+byte "EndDate"
+app_global_get
+>=
+byte "TotalFund"
+app_global_get
+byte "TargetFund"
+app_global_get
+==
+|
+assert
+byte "EventProgress"
+app_global_get
+int 1
+==
+assert
+byte "EventProgress"
+app_global_get
+store 0
+byte "EventProgress"
+load 0
+int 1
++
+app_global_put
+byte "TotalFund"
+app_global_get
+store 0
+itxn_begin
+int pay
+itxn_field TypeEnum
+byte "Receiver"
+app_global_get
+itxn_field Receiver
+byte "TargetFund"
+app_global_get
+int 1000
+-
+itxn_field Amount
+byte "Receiver"
+app_global_get
+itxn_field CloseRemainderTo
+itxn_submit
+int 1
+return
+main_l12:
+byte "EventProgress"
+app_global_get
+int 0
+==
+assert
+global LatestTimestamp
+byte "StartDate"
+app_global_get
+>=
+global LatestTimestamp
+byte "EndDate"
+app_global_get
+<=
+&
+assert
+byte "TotalFund"
+app_global_get
+store 0
+byte "TotalFund"
+load 0
+txna ApplicationArgs 1
+btoi
++
+app_global_put
+txn Sender
+byte "DonationMade"
+app_local_get
+store 1
+load 1
+int 0
+!=
+bnz main_l17
+txn Sender
+byte "DonationMade"
+txna ApplicationArgs 1
+btoi
+app_local_put
+main_l14:
+byte "TotalFund"
+app_global_get
+byte "TargetFund"
+app_global_get
+==
+bnz main_l16
+int 1
+return
+main_l16:
+byte "EventProgress"
+app_global_get
+int 0
+==
+assert
+byte "EventProgress"
+app_global_get
+store 0
+byte "EventProgress"
+load 0
+int 1
++
+app_global_put
+int 1
+return
+main_l17:
+txn Sender
+byte "DonationMade"
+load 1
+txna ApplicationArgs 1
+btoi
++
+app_local_put
+b main_l14
+main_l18:
+byte "EventProgress"
+app_global_get
+int 0
+==
+assert
+byte "EventProgress"
+app_global_get
+store 0
+byte "EventProgress"
+load 0
+int 1
++
+app_global_put
+int 1
+return
+main_l19:
+int 0
+return
+main_l20:
+int 0
+return
+main_l21:
+int 0
+return
+main_l22:
+int 1
+return
+main_l23:
+byte "TargetFund"
+txna ApplicationArgs 0
+btoi
+app_global_put
+byte "TotalFund"
+int 0
+app_global_put
+byte "Receiver"
+txna ApplicationArgs 1
+app_global_put
+byte "StartDate"
+global LatestTimestamp
+app_global_put
+byte "EndDate"
+global LatestTimestamp
+txna ApplicationArgs 2
+btoi
++
+app_global_put
+byte "EventProgress"
+int 0
+app_global_put
+int 1
+return
